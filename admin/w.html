@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-Select with Order Preservation</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+
+
+        /* Custom Multi Select */
+        .sd-multiSelect {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .sd-multiSelect label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .sd-multiSelect .ms-choice {
+            position: relative;
+            width: 100%;
+            border: 1px solid #e3e3e3;
+            background: #fff;
+            font-size: 15px;
+            height: auto;
+            min-height: 44px;
+            padding: 10px 15px;
+            color: #212529;
+            line-height: 1.5;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .sd-multiSelect .ms-choice:after {
+            content: "\f078";
+            font-family: "Font Awesome 6 Free";
+            font-weight: 900;
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 14px;
+            color: #666;
+        }
+
+        .sd-multiSelect .ms-choice:focus {
+            border-color: #ff7f27;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(255, 127, 39, 0.2);
+        }
+
+        .sd-multiSelect .ms-drop {
+            position: absolute;
+            width: 100%;
+            background: #fff;
+            border: 1px solid #e5e5e5;
+            border-radius: 4px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            margin-top: 5px;
+            display: none;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        /* Search box */
+        .search-box {
+            padding: 10px;
+            position: sticky;
+            top: 0;
+            background: white;
+            z-index: 1;
+            border-bottom: 1px solid #eee;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: #ff7f27;
+        }
+
+        .sd-multiSelect .ms-drop ul {
+            list-style: none;
+            padding: 0 10px 10px;
+            margin: 0;
+        }
+
+        .sd-multiSelect .ms-drop li {
+            position: relative;
+            padding: 8px 10px;
+            margin-bottom: 2px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+        }
+
+        .sd-multiSelect .ms-drop li:hover {
+            background-color: #f5f5f5;
+        }
+
+        .sd-multiSelect .ms-drop li input[type="checkbox"] {
+            position: absolute;
+            opacity: 0;
+            cursor: pointer;
+            height: 0;
+            width: 0;
+        }
+
+        .sd-multiSelect .ms-drop li label {
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            width: 100%;
+            margin: 0;
+        }
+
+        .sd-multiSelect .ms-drop li .checkmark {
+            position: relative;
+            height: 18px;
+            width: 18px;
+            min-width: 18px;
+            background-color: #fff;
+            border: 2px solid #ff7f27;
+            border-radius: 3px;
+            margin-right: 10px;
+        }
+
+        .sd-multiSelect .ms-drop li input:checked~.checkmark {
+            background-color: #ff7f27;
+        }
+
+        .sd-multiSelect .ms-drop li .checkmark:after {
+            content: "";
+            position: absolute;
+            display: none;
+            left: 5px;
+            top: 1px;
+            width: 5px;
+            height: 10px;
+            border: solid white;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+        }
+
+        .sd-multiSelect .ms-drop li input:checked~.checkmark:after {
+            display: block;
+        }
+
+        /* Selected items display */
+        .selected-items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            width: calc(100% - 20px);
+        }
+
+        .selected-item {
+            background-color: #ff7f27;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+        }
+
+        .selected-item .remove-item {
+            margin-left: 5px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .placeholder {
+            color: #999;
+            margin-right: auto;
+        }
+
+        .no-results {
+            padding: 10px;
+            color: #666;
+            text-align: center;
+            font-style: italic;
+        }
+    </style>
+</head>
+
+<body>
+
+        <div class="sd-multiSelect form-group">
+            <label for="current-job-role">Multi Select</label>
+            <div class="ms-choice" id="custom-select-trigger">
+                <span class="placeholder">Select options...</span>
+                <div class="selected-items" id="selected-items-container"></div>
+            </div>
+            <div class="ms-drop" id="custom-select-dropdown">
+                <div class="search-box">
+                    <input type="text" id="option-search" placeholder="Search options...">
+                </div>
+                <ul id="options-list">
+                    <li>
+                        <input type="checkbox" id="option-1" value="1">
+                        <label for="option-1">
+                            <span class="checkmark"></span>
+                            <span>Option 1</span>
+                        </label>
+                    </li>
+                    <li>
+                        <input type="checkbox" id="option-2" value="2">
+                        <label for="option-2">
+                            <span class="checkmark"></span>
+                            <span>Option 2</span>
+                        </label>
+                    </li>
+                    <li>
+                        <input type="checkbox" id="option-3" value="3">
+                        <label for="option-3">
+                            <span class="checkmark"></span>
+                            <span>Option 3</span>
+                        </label>
+                    </li>
+                    <li>
+                        <input type="checkbox" id="option-4" value="4">
+                        <label for="option-4">
+                            <span class="checkmark"></span>
+                            <span>Option 4</span>
+                        </label>
+                    </li>
+                    <li>
+                        <input type="checkbox" id="option-5" value="5">
+                        <label for="option-5">
+                            <span class="checkmark"></span>
+                            <span>Option 5</span>
+                        </label>
+                    </li>
+                    <li>
+                        <input type="checkbox" id="option-6" value="6">
+                        <label for="option-6">
+                            <span class="checkmark"></span>
+                            <span>Option 6</span>
+                        </label>
+                    </li>
+                    <li>
+                        <input type="checkbox" id="option-7" value="7">
+                        <label for="option-7">
+                            <span class="checkmark"></span>
+                            <span>Option 7</span>
+                        </label>
+                    </li>
+                </ul>
+                <div class="no-results" style="display: none;">No matching options found</div>
+            </div>
+            <select multiple id="current-job-role" class="sd-CustomSelect" style="display: none;">
+                <option value="1">Option 1</option>
+                <option value="2">Option 2</option>
+                <option value="3">Option 3</option>
+                <option value="4">Option 4</option>
+                <option value="5">Option 5</option>
+                <option value="6">Option 6</option>
+                <option value="7">Option 7</option>
+            </select>
+        </div>
+
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            const selectTrigger = $('#custom-select-trigger');
+            const selectDropdown = $('#custom-select-dropdown');
+            const hiddenSelect = $('#current-job-role');
+            const selectedItemsContainer = $('#selected-items-container');
+            const optionsList = $('#options-list');
+            const searchInput = $('#option-search');
+            const noResults = $('.no-results');
+
+            // Track selected options in order
+            let selectedOptions = [];
+
+            // Toggle dropdown
+            selectTrigger.on('click', function (e) {
+                e.stopPropagation();
+                selectDropdown.toggle();
+                $('.ms-drop').not(selectDropdown).hide();
+                if (selectDropdown.is(':visible')) {
+                    searchInput.focus();
+                }
+            });
+
+            // Close dropdown when clicking outside
+            $(document).on('click', function () {
+                selectDropdown.hide();
+            });
+
+            // Prevent dropdown close when clicking inside
+            selectDropdown.on('click', function (e) {
+                e.stopPropagation();
+            });
+
+            // Handle option selection
+            selectDropdown.find('input[type="checkbox"]').on('change', function () {
+                const value = $(this).val();
+                const text = $(this).next('label').find('span:last').text();
+
+                if ($(this).is(':checked')) {
+                    // Add to selected options if not already there
+                    if (!selectedOptions.some(opt => opt.value === value)) {
+                        selectedOptions.push({ value, text });
+                    }
+                } else {
+                    // Remove from selected options
+                    selectedOptions = selectedOptions.filter(opt => opt.value !== value);
+                }
+
+                // Update hidden select
+                hiddenSelect.val(selectedOptions.map(opt => opt.value));
+
+                // Update UI
+                updateSelectedItemsDisplay();
+
+                // Hide placeholder if items are selected
+                if (selectedOptions.length > 0) {
+                    selectTrigger.find('.placeholder').hide();
+                } else {
+                    selectTrigger.find('.placeholder').show();
+                }
+            });
+
+            // Update the selected items display
+            function updateSelectedItemsDisplay() {
+                selectedItemsContainer.empty();
+
+                selectedOptions.forEach(option => {
+                    selectedItemsContainer.append(`
+                        <div class="selected-item">
+                            ${option.text}
+                            <span class="remove-item" data-value="${option.value}">×</span>
+                        </div>
+                    `);
+                });
+
+                // Add click handler for remove buttons
+                $('.remove-item').on('click', function (e) {
+                    e.stopPropagation();
+                    const value = $(this).data('value');
+
+                    // Uncheck the corresponding checkbox
+                    selectDropdown.find(`input[value="${value}"]`).prop('checked', false).trigger('change');
+                });
+            }
+
+            // Search functionality
+            searchInput.on('input', function () {
+                const searchTerm = $(this).val().toLowerCase();
+                let hasVisibleItems = false;
+
+                optionsList.find('li').each(function () {
+                    const optionText = $(this).find('span:last').text().toLowerCase();
+                    if (optionText.includes(searchTerm)) {
+                        $(this).show();
+                        hasVisibleItems = true;
+                    } else {
+                        $(this).hide();
+                    }
+                });
+
+                if (hasVisibleItems) {
+                    noResults.hide();
+                } else {
+                    noResults.show();
+                }
+            });
+
+            // Initialize with any pre-selected options
+            hiddenSelect.find('option:selected').each(function () {
+                const value = $(this).val();
+                const text = $(this).text();
+                selectDropdown.find(`input[value="${value}"]`).prop('checked', true);
+
+                if (!selectedOptions.some(opt => opt.value === value)) {
+                    selectedOptions.push({ value, text });
+                }
+            });
+
+            if (selectedOptions.length > 0) {
+                selectTrigger.find('.placeholder').hide();
+                updateSelectedItemsDisplay();
+            }
+        });
+    </script>
+</body>
+
+</html>
